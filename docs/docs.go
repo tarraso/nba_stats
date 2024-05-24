@@ -9,40 +9,41 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {
-            "name": "API Support"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/game-stat": {
+        "/add-players": {
             "post": {
-                "description": "Log the statistics of a player in a game",
+                "description": "Add a new player to the database",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Log game statistics",
+                "tags": [
+                    "players"
+                ],
+                "summary": "Add a new player",
                 "parameters": [
                     {
-                        "description": "GameStat",
-                        "name": "stat",
+                        "description": "Player",
+                        "name": "player",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.GameStat"
+                            "$ref": "#/definitions/models.Player"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Game stat logged successfully!",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/models.Player"
                         }
                     },
                     "400": {
@@ -50,25 +51,57 @@ const docTemplate = `{
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
         },
-        "/game-stats": {
-            "get": {
-                "description": "Get the list of game statistics",
+        "/add-stat": {
+            "post": {
+                "description": "Add a new game stat to the database",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
-                "summary": "List game statistics",
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                "tags": [
+                    "stats"
+                ],
+                "summary": "Add a new game stat",
+                "parameters": [
+                    {
+                        "description": "Game Stat",
+                        "name": "stat",
+                        "in": "body",
+                        "required": true,
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/main.GameStat"
-                            }
+                            "$ref": "#/definitions/models.GameStat"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.GameStat"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -76,19 +109,28 @@ const docTemplate = `{
         },
         "/players": {
             "get": {
-                "description": "Get the list of players",
+                "description": "Get a list of all players",
                 "produces": [
                     "application/json"
                 ],
-                "summary": "List players",
+                "tags": [
+                    "players"
+                ],
+                "summary": "List all players",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.Player"
+                                "$ref": "#/definitions/models.Player"
                             }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -96,7 +138,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "main.GameStat": {
+        "models.GameStat": {
             "type": "object",
             "properties": {
                 "assists": {
@@ -105,11 +147,11 @@ const docTemplate = `{
                 "blocks": {
                     "type": "integer"
                 },
-                "date": {
-                    "type": "string"
-                },
                 "fouls": {
                     "type": "integer"
+                },
+                "game_date": {
+                    "type": "string"
                 },
                 "minutes_played": {
                     "type": "number"
@@ -131,7 +173,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.Player": {
+        "models.Player": {
             "type": "object",
             "properties": {
                 "id": {
@@ -150,12 +192,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "0.1",
-	Host:             "localhost:8080",
-	BasePath:         "/",
+	Version:          "",
+	Host:             "",
+	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "NBA Stats API",
-	Description:      "This is a sample server for logging NBA player statistics.",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

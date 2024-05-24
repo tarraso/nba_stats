@@ -1,9 +1,12 @@
 package main
 
-import "errors"
+import (
+	"errors"
+	"nba_stats/models"
+)
 
 // Validation function for GameStat
-func ValidateGameStat(gs GameStat) error {
+func ValidateGameStat(gs models.GameStat) error {
 	if gs.Points < 0 || gs.Rebounds < 0 || gs.Assists < 0 || gs.Steals < 0 || gs.Blocks < 0 || gs.Turnovers < 0 {
 		return errors.New("points, rebounds, assists, steals, blocks, and turnovers must be positive integers")
 	}

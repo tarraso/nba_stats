@@ -1,15 +1,14 @@
-basePath: /
 definitions:
-  main.GameStat:
+  models.GameStat:
     properties:
       assists:
         type: integer
       blocks:
         type: integer
-      date:
-        type: string
       fouls:
         type: integer
+      game_date:
+        type: string
       minutes_played:
         type: number
       player_id:
@@ -23,7 +22,7 @@ definitions:
       turnovers:
         type: integer
     type: object
-  main.Player:
+  models.Player:
     properties:
       id:
         type: integer
@@ -32,54 +31,72 @@ definitions:
       team:
         type: string
     type: object
-host: localhost:8080
 info:
-  contact:
-    name: API Support
-  description: This is a sample server for logging NBA player statistics.
-  title: NBA Stats API
-  version: "0.1"
+  contact: {}
 paths:
-  /game-stat:
+  /add-players:
     post:
       consumes:
       - application/json
-      description: Log the statistics of a player in a game
+      description: Add a new player to the database
       parameters:
-      - description: GameStat
+      - description: Player
         in: body
-        name: stat
+        name: player
         required: true
         schema:
-          $ref: '#/definitions/main.GameStat'
+          $ref: '#/definitions/models.Player'
       produces:
       - application/json
       responses:
-        "200":
-          description: Game stat logged successfully!
+        "201":
+          description: Created
           schema:
-            type: string
+            $ref: '#/definitions/models.Player'
         "400":
           description: Bad request
           schema:
             type: string
-      summary: Log game statistics
-  /game-stats:
-    get:
-      description: Get the list of game statistics
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Add a new player
+      tags:
+      - players
+  /add-stat:
+    post:
+      consumes:
+      - application/json
+      description: Add a new game stat to the database
+      parameters:
+      - description: Game Stat
+        in: body
+        name: stat
+        required: true
+        schema:
+          $ref: '#/definitions/models.GameStat'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
-            items:
-              $ref: '#/definitions/main.GameStat'
-            type: array
-      summary: List game statistics
+            $ref: '#/definitions/models.GameStat'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Add a new game stat
+      tags:
+      - stats
   /players:
     get:
-      description: Get the list of players
+      description: Get a list of all players
       produces:
       - application/json
       responses:
@@ -87,7 +104,13 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/main.Player'
+              $ref: '#/definitions/models.Player'
             type: array
-      summary: List players
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: List all players
+      tags:
+      - players
 swagger: "2.0"
