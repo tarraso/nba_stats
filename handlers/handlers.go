@@ -3,8 +3,12 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"nba_stats/models"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 // AddPlayerHandler godoc
@@ -107,5 +111,82 @@ func ListPlayersHandler(db *sql.DB) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(players)
+	}
+}
+
+// PlayerStatHandler godoc
+// @Summary player stats
+// @Description Get a list of all players
+// @Tags players
+// @Produce json
+// @Success 200 {array} models.Player
+// @Failure 500 {string} string "Internal server error"
+// @Router /players [get]
+func GetPlayerAvgStatHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		playerID, err := strconv.Atoi(vars["playerId"])
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		fmt.Fprintf(w, "Player ID: %s\n", playerID)
+		query := fmt.Sprintf(`
+SELECT
+	AVG(points) AS avg_points,
+	AVG(rebounds) AS avg_rebounds,
+	AVG(assists) AS avg_assists,
+	AVG(steals) AS avg_steals,
+	AVG(blocks) AS avg_blocks,
+	AVG(fouls) AS avg_fouls,
+	AVG(turnovers) AS avg_turnovers,
+	AVG(minutes_played) AS avg_minutes_played
+FROM
+	stats
+WHERE
+	player_id = %d;`, playerID)
+
+		rows, err := db.Query(query)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var avg_points float64
+		var avg_rebounds float64
+		var avg_assists float64
+		var avg_steals float64
+		var avg_blocks float64
+		var avg_fouls float64
+		var avg_turnovers float64
+		var avg_minutes_played float64
+		var stat models.AvgStat
+		if rows.Next() {
+			err := rows.Scan(&avg_points, &avg_rebounds, &avg_assists, &avg_steals, &avg_blocks,
+				&avg_fouls, &avg_turnovers, &avg_minutes_played)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			stat = models.AvgStat{
+				PlayerID:         playerID,
+				AvgPoints:        avg_points,
+				AvgRebounds:      avg_rebounds,
+				AvgAssists:       avg_assists,
+				AvgSteals:        avg_steals,
+				AvgBlocks:        avg_blocks,
+				AvgFouls:         avg_fouls,
+				AvgTurnovers:     avg_turnovers,
+				AvgMinutesPlayed: avg_minutes_played,
+			}
+			// Now you can use the 'name' and 'age' variables
+		} else {
+			http.Error(w, "No rows found", http.StatusNotFound)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(stat)
 	}
 }
