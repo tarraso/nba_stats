@@ -111,9 +111,9 @@ func ListPlayersHandler(db *sql.DB) http.HandlerFunc {
 // @Description Get a list of all players
 // @Tags players
 // @Produce json
-// @Success 200 {array} models.Player
+// @Success 200 {array} models.AvgStat
 // @Failure 500 {string} string "Internal server error"
-// @Router /players [get]
+// @Router /stats/player/:id [get]
 func GetPlayerAvgStatHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -180,5 +180,60 @@ WHERE
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(stat)
+	}
+}
+
+// PlayerStatHandler godoc
+// @Summary player stats
+// @Description Get a list of all players
+// @Tags players
+// @Produce json
+// @Success 200 {array} models.AvgStat
+// @Failure 500 {string} string "Internal server error"
+// @Router /stats/team/:id [get]
+func GetAvgStatHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		teamID, err := strconv.Atoi(vars["teamId"])
+		if err != nil {
+			http.Error(w, "Invalid team ID", http.StatusBadRequest)
+			return
+		}
+
+		query := `
+            SELECT
+                AVG(points) as avg_points,
+                AVG(rebounds) as avg_rebounds,
+                AVG(assists) as avg_assists,
+                AVG(steals) as avg_steals,
+                AVG(blocks) as avg_blocks,
+                AVG(fouls) as avg_fouls,
+                AVG(turnovers) as avg_turnovers,
+                AVG(minutes) as avg_minutes
+            FROM players
+            WHERE team_id = $1
+        `
+		var stats models.AvgStat
+		err = db.QueryRow(query, teamID).Scan(
+			&stats.AvgPoints,
+			&stats.AvgRebounds,
+			&stats.AvgAssists,
+			&stats.AvgSteals,
+			&stats.AvgBlocks,
+			&stats.AvgFouls,
+			&stats.AvgTurnovers,
+			&stats.AvgMinutesPlayed,
+		)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "No players found for this team", http.StatusNotFound)
+			} else {
+				http.Error(w, fmt.Sprintf("Database error: %v", err), http.StatusInternalServerError)
+			}
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(stats)
 	}
 }

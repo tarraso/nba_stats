@@ -45,6 +45,8 @@ func main() {
 
 	r.HandleFunc("/add-stat", handlers.AddStatHandler(db))
 	r.HandleFunc("/stat/player/{playerId}", handlers.GetPlayerAvgStatHandler(db))
+	r.HandleFunc("/stat/teams/{teamId}", handlers.GetAvgStatHandler(db))
+
 	r.HandleFunc("/add-players", handlers.AddPlayerHandler(db)) // POST /players
 	r.HandleFunc("/players", handlers.ListPlayersHandler(db))   // GET /players
 
