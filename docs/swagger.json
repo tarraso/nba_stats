@@ -105,7 +105,7 @@
                 "tags": [
                     "players"
                 ],
-                "summary": "List all players",
+                "summary": "player stats",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -171,8 +171,9 @@
                 "name": {
                     "type": "string"
                 },
-                "team": {
-                    "type": "string"
+                "team_id": {
+                    "description": "New field for foreign key",
+                    "type": "integer"
                 }
             }
         }

@@ -28,8 +28,9 @@ definitions:
         type: integer
       name:
         type: string
-      team:
-        type: string
+      team_id:
+        description: New field for foreign key
+        type: integer
     type: object
 info:
   contact: {}
@@ -110,7 +111,7 @@ paths:
           description: Internal server error
           schema:
             type: string
-      summary: List all players
+      summary: player stats
       tags:
       - players
 swagger: "2.0"

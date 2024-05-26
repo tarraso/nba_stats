@@ -116,7 +116,7 @@ const docTemplate = `{
                 "tags": [
                     "players"
                 ],
-                "summary": "List all players",
+                "summary": "player stats",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -182,8 +182,9 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "team": {
-                    "type": "string"
+                "team_id": {
+                    "description": "New field for foreign key",
+                    "type": "integer"
                 }
             }
         }
