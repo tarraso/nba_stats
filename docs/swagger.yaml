@@ -1,4 +1,27 @@
 definitions:
+  models.AvgStat:
+    properties:
+      avg_assists:
+        type: number
+      avg_blocks:
+        type: number
+      avg_fouls:
+        type: number
+      avg_game_date:
+        type: string
+      avg_minutes_played:
+        type: number
+      avg_points:
+        type: number
+      avg_rebounds:
+        type: number
+      avg_steals:
+        type: number
+      avg_turnovers:
+        type: number
+      player_id:
+        type: integer
+    type: object
   models.GameStat:
     properties:
       assists:
@@ -106,6 +129,44 @@ paths:
           schema:
             items:
               $ref: '#/definitions/models.Player'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: List all players
+      tags:
+      - players
+  /stats/player/:id:
+    get:
+      description: Get a list of all players
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.AvgStat'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: player stats
+      tags:
+      - players
+  /stats/team/:id:
+    get:
+      description: Get a list of all players
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.AvgStat'
             type: array
         "500":
           description: Internal server error

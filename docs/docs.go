@@ -116,7 +116,7 @@ const docTemplate = `{
                 "tags": [
                     "players"
                 ],
-                "summary": "player stats",
+                "summary": "List all players",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -135,9 +135,102 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/stats/player/:id": {
+            "get": {
+                "description": "Get a list of all players",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "players"
+                ],
+                "summary": "player stats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.AvgStat"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/stats/team/:id": {
+            "get": {
+                "description": "Get a list of all players",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "players"
+                ],
+                "summary": "player stats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.AvgStat"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "models.AvgStat": {
+            "type": "object",
+            "properties": {
+                "avg_assists": {
+                    "type": "number"
+                },
+                "avg_blocks": {
+                    "type": "number"
+                },
+                "avg_fouls": {
+                    "type": "number"
+                },
+                "avg_game_date": {
+                    "type": "string"
+                },
+                "avg_minutes_played": {
+                    "type": "number"
+                },
+                "avg_points": {
+                    "type": "number"
+                },
+                "avg_rebounds": {
+                    "type": "number"
+                },
+                "avg_steals": {
+                    "type": "number"
+                },
+                "avg_turnovers": {
+                    "type": "number"
+                },
+                "player_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.GameStat": {
             "type": "object",
             "properties": {
