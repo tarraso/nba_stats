@@ -4,9 +4,9 @@ import "time"
 
 // Player represents a basketball player
 type Player struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-	Team string `json:"team"`
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	TeamID int    `json:"team_id"` // New field for foreign key
 }
 
 // GameStat represents the statistics of a player in a game

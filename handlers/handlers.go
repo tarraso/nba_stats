@@ -25,20 +25,19 @@ import (
 func AddPlayerHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var player models.Player
-		err := json.NewDecoder(r.Body).Decode(&player)
-		if err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&player); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		query := `INSERT INTO players (name, team) VALUES ($1, $2) RETURNING id`
-		err = db.QueryRow(query, player.Name, player.Team).Scan(&player.ID)
+		query := `INSERT INTO players (name, team_id) VALUES ($1, $2) RETURNING id`
+		err := db.QueryRow(query, player.Name, player.TeamID).Scan(&player.ID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(player)
 	}
 }
@@ -85,28 +84,21 @@ func AddStatHandler(db *sql.DB) http.HandlerFunc {
 // @Router /players [get]
 func ListPlayersHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var players []models.Player
-
-		rows, err := db.Query("SELECT id, name, team FROM players")
+		rows, err := db.Query(`SELECT id, name, team_id FROM players`)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		defer rows.Close()
 
+		var players []models.Player
 		for rows.Next() {
 			var player models.Player
-			err := rows.Scan(&player.ID, &player.Name, &player.Team)
-			if err != nil {
+			if err := rows.Scan(&player.ID, &player.Name, &player.TeamID); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			players = append(players, player)
-		}
-
-		if err = rows.Err(); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
