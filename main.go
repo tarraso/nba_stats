@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-redis/redis"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -31,6 +32,8 @@ func main() {
 		DBName:     getEnv("DB_NAME", "your_default_db_name"),
 		DBHost:     getEnv("DB_HOST", "localhost"),
 		DBPort:     getEnv("DB_PORT", "5432"),
+		RedisHost:  getEnv("REDIS_HOST", "localhost"),
+		RedisPort:  getEnv("REDIS_PORT", "6379"),
 	}
 
 	db, err := initDB(cfg)
@@ -39,14 +42,20 @@ func main() {
 	}
 	defer db.Close()
 
+	rdb, err := initRedis(cfg)
+	if err != nil {
+		log.Fatalf("Could not connect to the database: %v\n", err)
+	}
+	defer db.Close()
+
 	runMigrations(db, cfg)
 
 	router := mux.NewRouter()
-	router.HandleFunc("/add-stat", handlers.AddStatHandler(db))
-	router.HandleFunc("/stat/players/{playerId}", handlers.GetPlayerAvgStatHandler(db))
-	router.HandleFunc("/stat/teams/{teamId}", handlers.GetTeamAvgStatHandler(db))
-	router.HandleFunc("/add-players", handlers.AddPlayerHandler(db)) // POST /players
-	router.HandleFunc("/players", handlers.ListPlayersHandler(db))   // GET /players
+	router.HandleFunc("/add-stat", handlers.AddStatHandler(db, rdb))
+	router.HandleFunc("/stat/players/{playerId}", handlers.GetPlayerAvgStatHandler(db, rdb))
+	router.HandleFunc("/stat/teams/{teamId}", handlers.GetTeamAvgStatHandler(db, rdb))
+	router.HandleFunc("/add-players", handlers.AddPlayerHandler(db, rdb)) // POST /players
+	router.HandleFunc("/players", handlers.ListPlayersHandler(db, rdb))   // GET /players
 
 	// Swagger endpoint
 	http.Handle("/swagger/", httpSwagger.WrapHandler)
@@ -70,6 +79,16 @@ func initDB(cfg Config) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+// init redis
+func initRedis(cfg Config) (*redis.Client, error) {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort),
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+	return rdb, nil
 }
 
 func runMigrations(db *sql.DB, cfg Config) {
