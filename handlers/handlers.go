@@ -113,7 +113,8 @@ func ListPlayersHandler(db *sql.DB) http.HandlerFunc {
 // @Produce json
 // @Success 200 {array} models.AvgStat
 // @Failure 500 {string} string "Internal server error"
-// @Router /stats/player/:id [get]
+// @param playerId
+// @Router /stat/players/{playerId} [get]
 func GetPlayerAvgStatHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -187,9 +188,10 @@ WHERE
 // @Description Get a list of all players
 // @Tags players
 // @Produce json
+// @Param teamId path int true "Player ID"
 // @Success 200 {array} models.AvgStat
 // @Failure 500 {string} string "Internal server error"
-// @Router /stats/player/:id [get]
+// @Router /stat/teams/{teamId} [get]
 func GetTeamAvgStatHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)

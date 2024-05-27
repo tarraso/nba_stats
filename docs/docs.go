@@ -136,7 +136,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/stats/player/:id": {
+        "/stat/players/{playerId}": {
             "get": {
                 "description": "Get a list of all players",
                 "produces": [
@@ -165,7 +165,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/stats/team/:id": {
+        "/stat/team/{teamId}": {
             "get": {
                 "description": "Get a list of all players",
                 "produces": [
@@ -174,7 +174,16 @@ const docTemplate = `{
                 "tags": [
                     "players"
                 ],
-                "summary": "player stats",
+                "summary": "team stats",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Player ID",
+                        "name": "playerId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

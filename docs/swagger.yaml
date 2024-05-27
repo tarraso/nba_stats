@@ -137,7 +137,7 @@ paths:
       summary: List all players
       tags:
       - players
-  /stats/player/:id:
+  /stat/players/{playerId}:
     get:
       description: Get a list of all players
       produces:
@@ -156,9 +156,15 @@ paths:
       summary: player stats
       tags:
       - players
-  /stats/team/:id:
+  /stat/team/{teamId}:
     get:
       description: Get a list of all players
+      parameters:
+      - description: Player ID
+        in: path
+        name: playerId
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -172,7 +178,7 @@ paths:
           description: Internal server error
           schema:
             type: string
-      summary: player stats
+      summary: team stats
       tags:
       - players
 swagger: "2.0"
