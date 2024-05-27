@@ -140,6 +140,12 @@ paths:
   /stat/players/{playerId}:
     get:
       description: Get a list of all players
+      parameters:
+      - description: PlayerId
+        in: path
+        name: playerId
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -156,13 +162,13 @@ paths:
       summary: player stats
       tags:
       - players
-  /stat/team/{teamId}:
+  /stat/teams/{teamId}:
     get:
       description: Get a list of all players
       parameters:
-      - description: Player ID
+      - description: teamId
         in: path
-        name: playerId
+        name: teamId
         required: true
         type: integer
       produces:

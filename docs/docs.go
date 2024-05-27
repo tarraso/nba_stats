@@ -146,6 +146,15 @@ const docTemplate = `{
                     "players"
                 ],
                 "summary": "player stats",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "PlayerId",
+                        "name": "playerId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -165,7 +174,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/stat/team/{teamId}": {
+        "/stat/teams/{teamId}": {
             "get": {
                 "description": "Get a list of all players",
                 "produces": [
@@ -178,8 +187,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Player ID",
-                        "name": "playerId",
+                        "description": "teamId",
+                        "name": "teamId",
                         "in": "path",
                         "required": true
                     }

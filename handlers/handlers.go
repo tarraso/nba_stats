@@ -111,9 +111,9 @@ func ListPlayersHandler(db *sql.DB) http.HandlerFunc {
 // @Description Get a list of all players
 // @Tags players
 // @Produce json
+// @Param playerId path int true "PlayerId"
 // @Success 200 {array} models.AvgStat
 // @Failure 500 {string} string "Internal server error"
-// @param playerId
 // @Router /stat/players/{playerId} [get]
 func GetPlayerAvgStatHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +188,7 @@ WHERE
 // @Description Get a list of all players
 // @Tags players
 // @Produce json
-// @Param teamId path int true "Player ID"
+// @Param teamId path int true "teamId"
 // @Success 200 {array} models.AvgStat
 // @Failure 500 {string} string "Internal server error"
 // @Router /stat/teams/{teamId} [get]
