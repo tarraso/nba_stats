@@ -3,10 +3,12 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"nba_stats/models"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-redis/redis"
 	"github.com/gorilla/mux"
@@ -124,63 +126,45 @@ func GetPlayerAvgStatHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 			fmt.Println("Error:", err)
 			return
 		}
-		query := fmt.Sprintf(`
-SELECT
-	AVG(points) AS avg_points,
-	AVG(rebounds) AS avg_rebounds,
-	AVG(assists) AS avg_assists,
-	AVG(steals) AS avg_steals,
-	AVG(blocks) AS avg_blocks,
-	AVG(fouls) AS avg_fouls,
-	AVG(turnovers) AS avg_turnovers,
-	AVG(minutes_played) AS avg_minutes_played
-FROM
-	stats
-WHERE
-	player_id = %d;`, playerID)
+		cacheKey := fmt.Sprintf("player_stats_%d", playerID)
 
-		rows, err := db.Query(query)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer rows.Close()
-
-		var avg_points float64
-		var avg_rebounds float64
-		var avg_assists float64
-		var avg_steals float64
-		var avg_blocks float64
-		var avg_fouls float64
-		var avg_turnovers float64
-		var avg_minutes_played float64
-		var stat models.AvgStat
-		if rows.Next() {
-			err := rows.Scan(&avg_points, &avg_rebounds, &avg_assists, &avg_steals, &avg_blocks,
-				&avg_fouls, &avg_turnovers, &avg_minutes_played)
+		// Try to get cached data
+		cachedData, err := rdb.Get(cacheKey).Result()
+		if err == redis.Nil {
+			print("???")
+			// Cache miss, fetch data from DB
+			stats, err := getAvgPlayerStats(db, playerID)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				if err == sql.ErrNoRows {
+					http.Error(w, "Player not found", http.StatusNotFound)
+				} else {
+					http.Error(w, "Internal server error", http.StatusInternalServerError)
+				}
 				return
 			}
-			stat = models.AvgStat{
-				PlayerID:         playerID,
-				AvgPoints:        avg_points,
-				AvgRebounds:      avg_rebounds,
-				AvgAssists:       avg_assists,
-				AvgSteals:        avg_steals,
-				AvgBlocks:        avg_blocks,
-				AvgFouls:         avg_fouls,
-				AvgTurnovers:     avg_turnovers,
-				AvgMinutesPlayed: avg_minutes_played,
-			}
-			// Now you can use the 'name' and 'age' variables
-		} else {
-			http.Error(w, "No rows found", http.StatusNotFound)
-			return
-		}
 
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(stat)
+			data, err := json.Marshal(stats)
+			if err != nil {
+				http.Error(w, "json marshal error", http.StatusInternalServerError)
+				return
+			}
+			print("AAAAAAAAAAAAAAAAAAAA")
+
+			//Make data expire after 24 hour
+			err = rdb.Set(cacheKey, data, 24*time.Hour).Err()
+			if err != nil {
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(stats)
+		} else if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		} else {
+			// Cache hit
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(cachedData))
+		}
 	}
 }
 
@@ -237,5 +221,57 @@ func GetTeamAvgStatHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(stats)
+	}
+}
+
+func getAvgPlayerStats(db *sql.DB, playerID int) (*models.AvgStat, error) {
+	query := fmt.Sprintf(`
+SELECT
+	AVG(points) AS avg_points,
+	AVG(rebounds) AS avg_rebounds,
+	AVG(assists) AS avg_assists,
+	AVG(steals) AS avg_steals,
+	AVG(blocks) AS avg_blocks,
+	AVG(fouls) AS avg_fouls,
+	AVG(turnovers) AS avg_turnovers,
+	AVG(minutes_played) AS avg_minutes_played
+FROM
+	stats
+WHERE
+	player_id = %d;`, playerID)
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var avg_points float64
+	var avg_rebounds float64
+	var avg_assists float64
+	var avg_steals float64
+	var avg_blocks float64
+	var avg_fouls float64
+	var avg_turnovers float64
+	var avg_minutes_played float64
+	if rows.Next() {
+		err := rows.Scan(&avg_points, &avg_rebounds, &avg_assists, &avg_steals, &avg_blocks,
+			&avg_fouls, &avg_turnovers, &avg_minutes_played)
+		if err != nil {
+			return nil, err
+		}
+		stat := models.AvgStat{
+			AvgPoints:        avg_points,
+			AvgRebounds:      avg_rebounds,
+			AvgAssists:       avg_assists,
+			AvgSteals:        avg_steals,
+			AvgBlocks:        avg_blocks,
+			AvgFouls:         avg_fouls,
+			AvgTurnovers:     avg_turnovers,
+			AvgMinutesPlayed: avg_minutes_played,
+		}
+		return &stat, nil
+	} else {
+		return nil, errors.New("no rows found")
 	}
 }

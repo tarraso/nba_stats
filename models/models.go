@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 // Player represents a basketball player
 type Player struct {
@@ -25,7 +27,6 @@ type GameStat struct {
 
 // AvgStat
 type AvgStat struct {
-	PlayerID         int       `json:"player_id"`
 	AvgPoints        float64   `json:"avg_points"`
 	AvgRebounds      float64   `json:"avg_rebounds"`
 	AvgAssists       float64   `json:"avg_assists"`
