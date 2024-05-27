@@ -184,41 +184,44 @@ func GetTeamAvgStatHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 			return
 		}
 
-		query := `
-            SELECT
-                AVG(points) as avg_points,
-                AVG(rebounds) as avg_rebounds,
-                AVG(assists) as avg_assists,
-                AVG(steals) as avg_steals,
-                AVG(blocks) as avg_blocks,
-                AVG(fouls) as avg_fouls,
-                AVG(turnovers) as avg_turnovers,
-                AVG(minutes) as avg_minutes
-            FROM players
-            WHERE team_id = $1
-        `
-		var stats models.AvgStat
-		err = db.QueryRow(query, teamID).Scan(
-			&stats.AvgPoints,
-			&stats.AvgRebounds,
-			&stats.AvgAssists,
-			&stats.AvgSteals,
-			&stats.AvgBlocks,
-			&stats.AvgFouls,
-			&stats.AvgTurnovers,
-			&stats.AvgMinutesPlayed,
-		)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				http.Error(w, "No players found for this team", http.StatusNotFound)
-			} else {
-				http.Error(w, fmt.Sprintf("Database error: %v", err), http.StatusInternalServerError)
+		cacheKey := fmt.Sprintf("team_stats%d", teamID)
+
+		// Try to get cached data
+		cachedData, err := rdb.Get(cacheKey).Result()
+		if err == redis.Nil {
+			// Cache miss, fetch data from DB
+			stats, err := getAvgTeamStats(db, teamID)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					http.Error(w, "Player not found", http.StatusNotFound)
+				} else {
+					http.Error(w, "Internal server error", http.StatusInternalServerError)
+				}
+				return
 			}
-			return
+
+			data, err := json.Marshal(stats)
+			if err != nil {
+				http.Error(w, "json marshal error", http.StatusInternalServerError)
+				return
+			}
+
+			//Make data expire after 24 hour
+			err = rdb.Set(cacheKey, data, 24*time.Hour).Err()
+			if err != nil {
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(stats)
+		} else if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		} else {
+			// Cache hit
+			w.Header().Set("Content-Type", "application/json")
+			w.Write([]byte(cachedData))
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(stats)
 	}
 }
 
@@ -272,4 +275,43 @@ WHERE
 	} else {
 		return nil, errors.New("no rows found")
 	}
+}
+
+func getAvgTeamStats(db *sql.DB, teamID int) (*models.AvgStat, error) {
+	query := `
+			SELECT
+			AVG(stats.points) AS avg_points,
+			AVG(stats.rebounds) AS avg_rebounds,
+			AVG(stats.assists) AS avg_assists,
+			AVG(stats.steals) AS avg_steals,
+			AVG(stats.blocks) AS avg_blocks,
+			AVG(stats.fouls) AS avg_fouls,
+			AVG(stats.turnovers) AS avg_turnovers,
+			AVG(stats.minutes_played) AS avg_minutes_played
+		FROM
+			stats
+		JOIN
+			players ON players.id = stats.player_id
+		WHERE
+			players.team_id = $1;
+	`
+	var stats models.AvgStat
+	err := db.QueryRow(query, teamID).Scan(
+		&stats.AvgPoints,
+		&stats.AvgRebounds,
+		&stats.AvgAssists,
+		&stats.AvgSteals,
+		&stats.AvgBlocks,
+		&stats.AvgFouls,
+		&stats.AvgTurnovers,
+		&stats.AvgMinutesPlayed,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, err
+		} else {
+			return nil, errors.New("database error")
+		}
+	}
+	return &stats, nil
 }
