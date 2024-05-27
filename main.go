@@ -12,6 +12,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -40,17 +41,18 @@ func main() {
 
 	runMigrations(db, cfg)
 
-	http.HandleFunc("/add-stat", handlers.AddStatHandler(db))
-	http.HandleFunc("/stat/players/{playerId}", handlers.GetPlayerAvgStatHandler(db))
-	http.HandleFunc("/stat/teams/{teamId}", handlers.GetTeamAvgStatHandler(db))
-	http.HandleFunc("/add-players", handlers.AddPlayerHandler(db)) // POST /players
-	http.HandleFunc("/players", handlers.ListPlayersHandler(db))   // GET /players
+	router := mux.NewRouter()
+	router.HandleFunc("/add-stat", handlers.AddStatHandler(db))
+	router.HandleFunc("/stat/players/{playerId}", handlers.GetPlayerAvgStatHandler(db))
+	router.HandleFunc("/stat/teams/{teamId}", handlers.GetTeamAvgStatHandler(db))
+	router.HandleFunc("/add-players", handlers.AddPlayerHandler(db)) // POST /players
+	router.HandleFunc("/players", handlers.ListPlayersHandler(db))   // GET /players
 
 	// Swagger endpoint
 	http.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	log.Println("Server running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
 
 // initDB initializes the database connection
