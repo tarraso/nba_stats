@@ -131,7 +131,6 @@ func GetPlayerAvgStatHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 		// Try to get cached data
 		cachedData, err := rdb.Get(cacheKey).Result()
 		if err == redis.Nil {
-			print("???")
 			// Cache miss, fetch data from DB
 			stats, err := getAvgPlayerStats(db, playerID)
 			if err != nil {
@@ -148,7 +147,6 @@ func GetPlayerAvgStatHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 				http.Error(w, "json marshal error", http.StatusInternalServerError)
 				return
 			}
-			print("AAAAAAAAAAAAAAAAAAAA")
 
 			//Make data expire after 24 hour
 			err = rdb.Set(cacheKey, data, 24*time.Hour).Err()
