@@ -73,6 +73,18 @@ func AddStatHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 			return
 		}
 
+		//cache invalidation
+		cacheKeyPlayer := fmt.Sprintf("player_stats_%d", stat.PlayerID)
+		rdb.Del(cacheKeyPlayer)
+		query = `SELECT team_id from players where id=$1`
+		var teamID int
+		err = db.QueryRow(query, stat.PlayerID).Scan(&teamID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		cacheKeyTeam := fmt.Sprintf("team_stats_%d", stat.PlayerID)
+		rdb.Del(cacheKeyTeam)
 		w.WriteHeader(http.StatusCreated)
 	}
 }
@@ -184,7 +196,7 @@ func GetTeamAvgStatHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 			return
 		}
 
-		cacheKey := fmt.Sprintf("team_stats%d", teamID)
+		cacheKey := fmt.Sprintf("team_stats_%d", teamID)
 
 		// Try to get cached data
 		cachedData, err := rdb.Get(cacheKey).Result()
