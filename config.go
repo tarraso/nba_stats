@@ -10,6 +10,8 @@ type Config struct {
 	DBName     string
 	DBHost     string
 	DBPort     string
+	RedisHost  string
+	RedisPort  string
 }
 
 func LoadConfig() Config {
@@ -19,6 +21,8 @@ func LoadConfig() Config {
 		DBName:     getEnv("DB_NAME", "your_default_db_name"),
 		DBHost:     getEnv("DB_HOST", "localhost"),
 		DBPort:     getEnv("DB_PORT", "5432"),
+		RedisHost:  getEnv("REDIS_HOST", "localhost"),
+		RedisPort:  getEnv("REDIS_PORT", "6379"),
 	}
 }
 

@@ -13,7 +13,10 @@ services:
       - "8080:8080"
     depends_on:
       - db
-
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
   db:
     image: postgres:13-alpine
     environment:

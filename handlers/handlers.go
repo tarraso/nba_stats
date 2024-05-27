@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-redis/redis"
 	"github.com/gorilla/mux"
 )
 
@@ -22,7 +23,7 @@ import (
 // @Failure 400 {string} string "Bad request"
 // @Failure 500 {string} string "Internal server error"
 // @Router /add-players [post]
-func AddPlayerHandler(db *sql.DB) http.HandlerFunc {
+func AddPlayerHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var player models.Player
 		if err := json.NewDecoder(r.Body).Decode(&player); err != nil {
@@ -53,7 +54,7 @@ func AddPlayerHandler(db *sql.DB) http.HandlerFunc {
 // @Failure 400 {string} string "Bad request"
 // @Failure 500 {string} string "Internal server error"
 // @Router /add-stat [post]
-func AddStatHandler(db *sql.DB) http.HandlerFunc {
+func AddStatHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var stat models.GameStat
 		err := json.NewDecoder(r.Body).Decode(&stat)
@@ -82,7 +83,7 @@ func AddStatHandler(db *sql.DB) http.HandlerFunc {
 // @Success 200 {array} models.Player
 // @Failure 500 {string} string "Internal server error"
 // @Router /players [get]
-func ListPlayersHandler(db *sql.DB) http.HandlerFunc {
+func ListPlayersHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query(`SELECT id, name, team_id FROM players`)
 		if err != nil {
@@ -115,7 +116,7 @@ func ListPlayersHandler(db *sql.DB) http.HandlerFunc {
 // @Success 200 {array} models.AvgStat
 // @Failure 500 {string} string "Internal server error"
 // @Router /stat/players/{playerId} [get]
-func GetPlayerAvgStatHandler(db *sql.DB) http.HandlerFunc {
+func GetPlayerAvgStatHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		playerID, err := strconv.Atoi(vars["playerId"])
@@ -192,7 +193,7 @@ WHERE
 // @Success 200 {array} models.AvgStat
 // @Failure 500 {string} string "Internal server error"
 // @Router /stat/teams/{teamId} [get]
-func GetTeamAvgStatHandler(db *sql.DB) http.HandlerFunc {
+func GetTeamAvgStatHandler(db *sql.DB, rdb *redis.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		teamID, err := strconv.Atoi(vars["teamId"])
