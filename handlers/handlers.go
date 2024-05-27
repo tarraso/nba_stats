@@ -122,7 +122,6 @@ func GetPlayerAvgStatHandler(db *sql.DB) http.HandlerFunc {
 			fmt.Println("Error:", err)
 			return
 		}
-		fmt.Fprintf(w, "Player ID: %s\n", playerID)
 		query := fmt.Sprintf(`
 SELECT
 	AVG(points) AS avg_points,
@@ -184,14 +183,14 @@ WHERE
 }
 
 // PlayerStatHandler godoc
-// @Summary player stats
+// @Summary team stats
 // @Description Get a list of all players
 // @Tags players
 // @Produce json
 // @Success 200 {array} models.AvgStat
 // @Failure 500 {string} string "Internal server error"
-// @Router /stats/team/:id [get]
-func GetAvgStatHandler(db *sql.DB) http.HandlerFunc {
+// @Router /stats/player/:id [get]
+func GetTeamAvgStatHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		teamID, err := strconv.Atoi(vars["teamId"])
